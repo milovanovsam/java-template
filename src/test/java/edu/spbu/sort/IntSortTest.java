@@ -32,10 +32,11 @@ public class IntSortTest
   }
 
   @Test
-  public void testSortArray() throws Exception {
+  public void testSortArray() {
     int array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
-
-    IntSort.sort(array);
+    int left = 0;
+    int right = array.length-1;
+    IntSort.sort(array, left, right);
 
     // проверяем правильность сортировки
     int previousValue = Integer.MIN_VALUE;
@@ -44,9 +45,9 @@ public class IntSortTest
       previousValue = array[i];
     }
   }
-
+/*
   @Test
-  public void testSortList() throws Exception {
+  public void testSortList() {
     int array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
     List<Integer> list = new ArrayList<Integer>(ARRAY_SIZE);
     for (int i: array) {
@@ -55,7 +56,7 @@ public class IntSortTest
 
     //сортируем массив и замеряем время работы
     long startTime = System.nanoTime();
-    IntSort.sort(list);
+    IntSort.sort(array,0,array.length-1);
     long estimatedTime = System.nanoTime() - startTime;
     System.out.println("Execution time(ms) " + (estimatedTime/ 1000000));
 
@@ -65,5 +66,5 @@ public class IntSortTest
       assertTrue("Element " + list.get(i) + " at " + i + " position is not in the order", list.get(i) >= previousValue);
       previousValue = list.get(i);
     }
-  }
+  }*/
 }
