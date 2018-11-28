@@ -1,7 +1,7 @@
 package edu.spbu;
 
 import edu.spbu.matrix.*;
-
+/*
 public class MatrixPerfTest
 {
   public static final String MATRIX1_NAME = "m1.txt";
@@ -29,4 +29,4 @@ public class MatrixPerfTest
     System.out.println("Sparse Matrix time: " +(System.currentTimeMillis() - start));
     System.out.println("equals: " + r1.equals(r2));
   }
-}
+}*/

@@ -1,5 +1,5 @@
 package edu.spbu.matrix;
-
+import java.io.IOException;
 /**
  * Разряженная матрица
  */
@@ -16,11 +16,21 @@ public class SparseMatrix implements Matrix
    * однопоточное умнджение матриц
    * должно поддерживаться для всех 4-х вариантов
    *
-   * @param o
+   * @param
    * @return
    */
-  @Override public Matrix mul(Matrix o)
-  {
+  @Override public double getCell(int x, int y){
+    return 0;
+  }
+  @Override public int numberOfColumns() {
+    return 0;
+  }
+
+  @Override
+  public int numberOfRows() {
+    return 0;
+  }
+    @Override public Matrix mul(Matrix o) throws IOException{
     return null;
   }
 
@@ -30,7 +40,7 @@ public class SparseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o)
+  /*@Override public Matrix dmul(Matrix o)
   {
     return null;
   }
