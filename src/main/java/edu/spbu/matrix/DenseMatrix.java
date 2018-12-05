@@ -24,12 +24,12 @@ public class DenseMatrix implements Matrix
   public double getCell(int row, int column) {
     return dMatrix[row][column];
   }
-/*
+
   public SparseMatrix toSparse(){
     SparseMatrix result = new SparseMatrix(rows, columns);
     int number = 0;
     for (int i = 0; i<rows; i++)
-      for (int j=0; j<columns; j++)                             перевод dense в sparce после написания класса sparce
+      for (int j=0; j<columns; j++)
         if (dMatrix[i][j] != 0)
         {
           result.value.put(number, dMatrix[i][j]);
@@ -40,18 +40,18 @@ public class DenseMatrix implements Matrix
     number++;
     return result;
   }
-  */
+
 public DenseMatrix(int x, int y){
   rows = x;
   columns = y;
-  dMatrix = new double[rows][columns];
+  dMatrix = new double[x][y];
 }
 
   public void printDenseMatrix(){
     for (int i = 0; i<rows; i++){
       for (int j=0; j<columns; j++)
         System.out.print(dMatrix[i][j]+ " ");
-      System.out.println(" ");
+      System.out.println();
     }
   }
   /**
@@ -69,10 +69,10 @@ public DenseMatrix(int x, int y){
 
     while(input.hasNextLine() && currentRow.trim().length()!=0) /* пока есть строка и она не пустая */
     {
-      ++rows;
+
       currentRow = input.nextLine();
       currentRowArray = currentRow.split(" ");
-      if(rows == 1)
+      if(rows == 0)
       {
         columns = currentRowArray.length;
         dMatrix = new double[ARRAY_SIZE][columns];
@@ -80,26 +80,19 @@ public DenseMatrix(int x, int y){
 
       for(j=0; j<columns; ++j)
       {
-        dMatrix[rows-1][j]=Double.parseDouble(currentRowArray[j]);
+        dMatrix[rows][j]=Double.parseDouble(currentRowArray[j]);
       }
+      rows++;
     }
     input.close();
   }
 
-
-/**
-   * однопоточное умнджение матриц
-   * должно поддерживаться для всех 4-х вариантов
-   *
-   * @param o
-   * @return
-   */
   @Override public Matrix mul(Matrix o) throws IOException {
     if (o instanceof DenseMatrix) {
 
       int row1 = rows;
       int col1 = columns;
-      int row2 = o.numberOfRows();
+      //int row2 = o.numberOfRows();
       int col2 = o.numberOfColumns();
 
       DenseMatrix result = new DenseMatrix(row1, col2);
@@ -110,10 +103,10 @@ public DenseMatrix(int x, int y){
             result.dMatrix[i][j] += dMatrix[i][k] * o.getCell(k, j);
       return result;
     }
-    /*if (o instanceof SparseMatrix)
+    if (o instanceof SparseMatrix)
     {
       return this.toSparse().mul(o);
-    }*/
+    }
     return null;
   }
   /**
@@ -125,26 +118,23 @@ public DenseMatrix(int x, int y){
   @Override public Matrix dmul(Matrix o)
   {
     return null;
-  }
+  }*/
 
-
-   * спавнивает с обоими вариантами
-   * @param o
-   * @return
-   */
   @Override public boolean equals(Object o){
     if(!(o instanceof Matrix))
       return false;
 
-    Matrix Q = ((Matrix)o);
-    if(Q.numberOfRows() != rows || Q.numberOfColumns() != columns)
+    Matrix P = ((Matrix)o);
+    if(P.numberOfRows() != rows || P.numberOfColumns() != columns)
       return false;
 
     int i, j;
-    for(i = 0; i < rows; ++i)
-      for(j=0; j< columns; ++j)
-        if(dMatrix[i][j] != Q.getCell(i,j))
+    int k = 0;
+    for(i = 0; i < rows; i++)
+      for(j = 0; j < columns; j++)
+        if(dMatrix[i][j] != P.getCell(i,j)) {
           return false;
+        }
     return true;
   }
 }
