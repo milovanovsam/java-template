@@ -7,6 +7,7 @@ import java.io.IOException;
  */
 public interface Matrix
 {
+  public final static double EPSILON = 0.00000001;
   int numberOfRows();
   double getCell(int row, int column);
   int numberOfColumns();
@@ -25,5 +26,5 @@ public interface Matrix
    * @param o
    * @return
    */
-  //Matrix dmul(Matrix o);
+  Matrix dmul(Matrix o, int h);
 }

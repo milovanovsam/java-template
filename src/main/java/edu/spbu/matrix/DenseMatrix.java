@@ -32,12 +32,12 @@ public class DenseMatrix implements Matrix
       for (int j=0; j<columns; j++)
         if (dMatrix[i][j] != 0)
         {
-          result.value.put(number, dMatrix[i][j]);
-          result.row.put(number, i);
-          result.column.put(number, j);
+          result.value.add(number, dMatrix[i][j]);
+          result.row.add(number, i);
+          result.column.add(number, j);
           number++;
         }
-    number++;
+    //System.out.println();
     return result;
   }
 
@@ -92,7 +92,6 @@ public DenseMatrix(int x, int y){
 
       int row1 = rows;
       int col1 = columns;
-      //int row2 = o.numberOfRows();
       int col2 = o.numberOfColumns();
 
       DenseMatrix result = new DenseMatrix(row1, col2);
@@ -114,11 +113,54 @@ public DenseMatrix(int x, int y){
    *
    * @param o
    * @return
+   * */
 
-  @Override public Matrix dmul(Matrix o)
+  @Override public Matrix dmul(Matrix o, int h)
   {
-    return null;
-  }*/
+    DenseMatrix result = new DenseMatrix(rows, o.numberOfColumns());
+
+    class mul implements Runnable {
+      int firstRow;
+      int lastRow;
+      public mul (int x, int y)
+      {
+        firstRow = x;
+        lastRow = y;
+      }
+      public void run()
+      {
+        for (int i = firstRow; i <= lastRow; i++)
+          for( int j = 0; j < o.numberOfColumns(); j++)
+            for ( int k = 0; k < o.numberOfRows(); k++)
+              result.dMatrix[i][j] += getCell(i,k) * o.getCell(k,j);
+      }
+    }
+
+    int threadsCount = h;
+    if (threadsCount > rows) threadsCount = rows;
+
+    int count = rows / threadsCount; //сколько строк на каждый поток приходится
+    int additional = rows % threadsCount;
+
+    Thread[] threads = new Thread[threadsCount];
+    int start = 0; int cnt;
+    for (int i = 0; i < threadsCount; i++) {
+      if (i == 0) cnt = count + additional;
+      else cnt = count;
+      threads[i] = new Thread(new mul(start, start + cnt - 1));
+      start += cnt;
+      threads[i].start();
+    }
+    //ждем завершения всех потоков
+    try {
+      for (int t = 0; t < threadsCount; t++) {
+        threads[t].join();
+      }
+    } catch (InterruptedException e) {
+      System.out.println("Interrupted");
+    }
+    return result;
+  }
 
   @Override public boolean equals(Object o){
     if(!(o instanceof Matrix))

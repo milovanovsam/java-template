@@ -3,6 +3,9 @@ import java.io.IOException;
 import java.util.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+
+import static java.lang.Math.abs;
+
 /**
  * Разряженная матрица
  */
@@ -10,9 +13,9 @@ public class SparseMatrix implements Matrix
 {
     public int rows = 0;
     public int columns = 0;
-    public HashMap<Integer,Double> value = new HashMap<>();
-    public HashMap<Integer,Integer> row = new HashMap<>();
-    public HashMap<Integer,Integer> column = new HashMap<>();
+    ArrayList<Double> value = new ArrayList<>();
+    ArrayList<Integer> row = new ArrayList<>();
+    ArrayList<Integer> column = new ArrayList<>();
 
     @Override public int numberOfColumns() {
         return columns;
@@ -23,13 +26,13 @@ public class SparseMatrix implements Matrix
     }
 
     @Override public double getCell(int x, int y){
-        int key = 0;
+        int index = 0;
         for (int i=0; i< row.size(); i++)
             if (x == row.get(i)) {
-                key = i;
+                index = i;
                 for (int j = 0; j < column.size(); j++)
-                    if (j == key && y == column.get(j))
-                        return value.get(key);
+                    if (j == index && y == column.get(j))
+                        return value.get(index);
             }
         return 0;
     }
@@ -53,15 +56,15 @@ public class SparseMatrix implements Matrix
 
     public SparseMatrix toSparse(DenseMatrix matrix){
         SparseMatrix result = new SparseMatrix(matrix.rows, matrix.columns);
-        int key = 0;
+        int index = 0;
         for (int i = 0; i< matrix.rows; i++)
             for (int j=0; j<matrix.columns; j++)
                 if (matrix.dMatrix[i][j] != 0)
                 {
-                    result.value.put(key, matrix.dMatrix[i][j]);
-                    result.row.put(key, i);
-                    result.column.put(key, j);
-                    key++;
+                    result.value.add(index, matrix.dMatrix[i][j]);
+                    result.row.add(index, i);
+                    result.column.add(index, j);
+                    index++;
                 }
         return result;
     }
@@ -70,9 +73,9 @@ public class SparseMatrix implements Matrix
         SparseMatrix result = new SparseMatrix(columns, rows);
         int[] count = new int[columns];
         for (int i = 0; i< value.size(); i++) {
-                result.value.put(i, value.get(i));
-                result.row.put(i, column.get(i));
-                result.column.put(i, row.get(i));
+                result.value.add(i, value.get(i));
+                result.row.add(i, column.get(i));
+                result.column.add(i, row.get(i));
                 count[column.get(i)]++;
             }
         SparseMatrix itog = new SparseMatrix(columns, rows);
@@ -82,9 +85,9 @@ public class SparseMatrix implements Matrix
         for (int i = 0; i < rows;i++){
             while (  k < count[i]) {
                 if(result.row.get(j) == i){
-                    itog.value.put(h, result.value.get(j));
-                    itog.row.put(h, result.row.get(j));
-                    itog.column.put(h, result.column.get(j));
+                    itog.value.add( h, result.value.get(j));
+                    itog.row.add(h, result.row.get(j));
+                    itog.column.add(h, result.column.get(j));
                     k++;
                     h++;
                 }
@@ -96,10 +99,7 @@ public class SparseMatrix implements Matrix
     return itog;
         }
 
-    /**
-   * загружает матрицу из файла
-   * @param fileName
-   */
+
   public SparseMatrix(String fileName) throws FileNotFoundException {
       if(fileName.trim().length()==0) // если файл не существует
           return;
@@ -117,9 +117,9 @@ public class SparseMatrix implements Matrix
           for (int i = 0; i < currentRowArray.length; i++){
               val = Double.parseDouble(currentRowArray[i]);
               if (val != 0.0) {
-                  row.put(j,rows);
-                  value.put(j,val);
-                  column.put(j,i);
+                  row.add(j,rows);
+                  value.add(j,val);
+                  column.add(j,i);
                   j++;
               }
           }
@@ -156,21 +156,21 @@ public class SparseMatrix implements Matrix
                   int p1 = i;
                      int p2 = j;
                      double sum = 0;
-                     while ( (p1 < value.size() ) && ( row.get(p1)  ==  row.get(i) ) && ( Q.row.get(p2) == Q.row.get(j) )  && ( p2 < Q.value.size() ) ) {
+                     while ( p1 < value.size()  &&  p2 < Q.value.size() && row.get(p1).equals(row.get(i)) && Q.row.get(p2).equals(Q.row.get(j)))  {
                          if (column.get(p1) < Q.column.get(p2)) {
                                 p1++;
                             } else if (column.get(p1) > Q.column.get(p2)) {
                                 p2++;
-                            } else if (column.get(p1) == Q.column.get(p2)) {
+                            } else if (column.get(p1).equals(Q.column.get(p2))) {
                                 sum += value.get(p1) * Q.value.get(p2);
-                                p1++; p2++;
+                               p1++; p2++;
                             }
+                         if(p1 == value.size() || p2 == Q.value.size()) break;
                         }
                      if (sum != 0) {
-                         int key = result.value.size();
-                         result.value.put(key, sum);
-                         result.row.put(key, row.get(i));
-                         result.column.put(key, Q.row.get(j));
+                         result.value.add(sum);
+                         result.row.add(row.get(i));
+                         result.column.add(Q.row.get(j));
                             }
                   while (j < Q.value.size() && Q.row.get(j) == current2)
                       j++;
@@ -178,34 +178,45 @@ public class SparseMatrix implements Matrix
               while (i < value.size() && row.get(i) == current1)
                   i++;
           }
-       return result;
+          return result;
       }
       return null;
   }
 
 
-    /**
+ /**
    * многопоточное умножение матриц
    *
    * @param o
    * @return
    */
-  /*@Override public Matrix dmul(Matrix o)
+  @Override public Matrix dmul(Matrix o, int h)
   {
     return null;
-  }*/
+  }
 
   @Override public boolean equals (Object o) {
       if(!(o instanceof Matrix))
           return false;
 
       SparseMatrix Q = ((SparseMatrix)o);
-      if(Q.numberOfRows() != rows || Q.numberOfColumns() != columns)
+      if(Q.numberOfRows() != rows || Q.numberOfColumns() != columns) {
+          System.out.println(" kek");
           return false;
-      for (int i = 0; i<value.size(); i++)
-          if (value.get(i)-Q.value.get(i) != 0 || row.get(i)-Q.row.get(i) != 0
-                  || column.get(i)-Q.column.get(i) != 0)
-              return false;
+      }
+      if(value.size() != Q.value.size()){
+          System.out.println(" lol");
+          return false;
+      }
+      if (Q.value.size() > 0) {
+          for (int i = 0; i < value.size(); i++)
+              if (abs(value.get(i) - Q.value.get(i)) > EPSILON || !row.get(i).equals(Q.row.get(i))
+                      || !column.get(i).equals(Q.column.get(i))) {
+                  //System.out.println(k+" " + i + " " + value.get(i) + " " + Q.value.get(i) + " " + row.get(i) + " " + Q.row.get(i) + " " + column.get(i) + " " + Q.column.get(i));
+                  return false;
+              }
+
+      }
       return true;
   }
 }
