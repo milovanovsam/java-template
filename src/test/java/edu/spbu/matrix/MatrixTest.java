@@ -96,15 +96,36 @@ public class MatrixTest {
     long t7 = System.currentTimeMillis();
     R4 = Q.mul(D);
     long t8 = System.currentTimeMillis();
-    R = ((DenseMatrix)R).toSparse();
+    long t9 = System.currentTimeMillis();
+    R4 = Q.dmul(D,4);
+    long t10 = System.currentTimeMillis();
+    R3 = ((DenseMatrix)R3).toSparse();
+    System.out.println("Время Sparse параллельного перемножения матриц на 4 потоках размерами 2000 X 2000: "
+            +(t10-t9));
     System.out.println("Время Sparse перемножения матриц с размерами 2000 X 2000: "
             +(t8-t7));
-    System.out.println("Время парралельного перемножения матриц на 4 потоках размерами 2000 X 2000: "
+    System.out.println("Время параллельного перемножения матриц на 4 потоках размерами 2000 X 2000: "
             +(t6-t5));
-    System.out.println("Время парралельного перемножения матриц на 2 потоках размерами 2000 X 2000: "
+    System.out.println("Время параллельного перемножения матриц на 2 потоках размерами 2000 X 2000: "
             +(t4-t3));
     System.out.println("Время обычного перемножения матриц размерами 2000 X 2000: "
             +(t2-t1));
-    assertEquals(R,R4);
+    assertEquals(R3,R4);
+  }
+  @Test
+  public void dmulSS () throws IOException {
+    Matrix m1 = new SparseMatrix("m1.txt");
+    Matrix m2 = new SparseMatrix("m2.txt");
+    long t1 = System.currentTimeMillis();
+    Matrix R = m1.mul(m2);
+    long t2 = System.currentTimeMillis();
+    long t3 = System.currentTimeMillis();
+    Matrix R2 = m1.dmul(m2,4);
+    long t4 = System.currentTimeMillis();
+    System.out.println("Время Sparse параллельного перемножения матриц на 4 потоках размерами 2000 X 2000: "
+            +(t4-t3));
+    System.out.println("Время Sparse перемножения матриц с размерами 2000 X 2000: "
+            +(t2-t1));
+    assertEquals(R,R2);
   }
 }

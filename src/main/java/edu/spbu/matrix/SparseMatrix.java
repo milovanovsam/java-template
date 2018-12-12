@@ -192,7 +192,134 @@ public class SparseMatrix implements Matrix
    */
   @Override public Matrix dmul(Matrix o, int h)
   {
-    return null;
+      SparseMatrix result = new SparseMatrix(rows, o.numberOfColumns());
+      SparseMatrix result1 = new SparseMatrix(rows, o.numberOfColumns());
+      SparseMatrix result2 = new SparseMatrix(rows, o.numberOfColumns());
+      SparseMatrix result3 = new SparseMatrix(rows, o.numberOfColumns());
+      SparseMatrix result0 = new SparseMatrix(rows, o.numberOfColumns());
+      SparseMatrix Q  = ((SparseMatrix) o).SparseMatrixTranspose();
+
+      class mul implements Runnable {
+          int firstElement;
+          int lastElement;
+          int number;
+          public mul (int x, int y, int z)
+          {
+              firstElement = x;
+              lastElement = y;
+              number = z;
+          }
+          public void run()
+          {
+              for(int i = firstElement; i < lastElement;){
+                  int current1 = row.get(i);
+                  for(int j = 0; j < Q.value.size();) {
+                      int current2 = Q.row.get(j);
+                      int p1 = i;
+                      int p2 = j;
+                      double sum = 0;
+                      while ( p1 < lastElement  &&  p2 < Q.value.size() && row.get(p1).equals(row.get(i)) && Q.row.get(p2).equals(Q.row.get(j)))  {
+                          if (column.get(p1) < Q.column.get(p2)) {
+                              p1++;
+                          } else if (column.get(p1) > Q.column.get(p2)) {
+                              p2++;
+                          } else if (column.get(p1).equals(Q.column.get(p2))) {
+                              sum += value.get(p1) * Q.value.get(p2);
+                              p1++; p2++;
+                          }
+                          if(p1 == lastElement || p2 == Q.value.size()) break;
+                      }
+                      if (sum != 0) {
+                          switch(number){
+                              case 0:
+                                  result0.value.add(sum);
+                                  result0.row.add(row.get(i));
+                                  result0.column.add(Q.row.get(j));
+                                  break;
+                              case 1:
+                                  result1.value.add(sum);
+                                  result1.row.add(row.get(i));
+                                  result1.column.add(Q.row.get(j));
+                                  break;
+                              case 2:
+                                  result2.value.add(sum);
+                                  result2.row.add(row.get(i));
+                                  result2.column.add(Q.row.get(j));
+                                  break;
+                              case 3:
+                                  result3.value.add(sum);
+                                  result3.row.add(row.get(i));
+                                  result3.column.add(Q.row.get(j));
+                                  break;
+                          }
+                      }
+                      while (j < Q.value.size() && Q.row.get(j) == current2)
+                          j++;
+                  }
+                  while (i < lastElement && row.get(i) == current1)
+                      i++;
+              }
+          }
+      }
+
+      int threadsCount = h;
+      if (threadsCount > rows) threadsCount = rows;
+      int count = value.size() / threadsCount; //сколько строк на каждый поток приходится
+      int additional = value.size() % threadsCount;
+
+      Thread[] threads = new Thread[threadsCount];
+      int start = 0; int cnt; // индекс с которого начнём и сколько элементов каждому потоку по дефолту
+      for (int i = 0; i < threadsCount; i++) {
+          if (i == 0) cnt = count + additional;
+          else cnt = count;
+          int left = start + cnt - 1;
+          int right = start + cnt + 1;
+          if (i== threadsCount-1) {
+              threads[i] = new Thread(new mul(start, (value.size()), i));
+          } else {
+              while (row.get(left).equals(row.get(start + cnt)) && row.get(right).equals(row.get(start + cnt))) {
+                  left--;
+                  right++;
+              }
+              if (!row.get(right).equals(row.get(start + cnt))) {
+                  threads[i] = new Thread(new mul(start, right, i));
+                  start = right;
+              } else {
+                  threads[i] = new Thread(new mul(start, (left+1), i));
+                  start = (left + 1);
+              }
+          }
+          threads[i].start();
+      }
+      //ждем завершения всех потоков
+      try {
+          for (int t = 0; t < threadsCount; t++) {
+              threads[t].join();
+          }
+      } catch (InterruptedException e) {
+          System.out.println("Interrupted");
+      }
+      for (int k = 0; k < result0.value.size(); k++) {
+          result.value.add(result0.value.get(k));
+          result.row.add(result0.row.get(k));
+          result.column.add(result0.column.get(k));
+      }
+      for (int k = 0; k < result1.value.size(); k++) {
+          result.value.add(result1.value.get(k));
+          result.row.add(result1.row.get(k));
+          result.column.add(result1.column.get(k));
+      }
+      for (int k = 0; k < result2.value.size(); k++) {
+          result.value.add(result2.value.get(k));
+          result.row.add(result2.row.get(k));
+          result.column.add(result2.column.get(k));
+      }
+      for (int k = 0; k < result3.value.size(); k++) {
+          result.value.add(result3.value.get(k));
+          result.row.add(result3.row.get(k));
+          result.column.add(result3.column.get(k));
+      }
+      return result;
   }
 
   @Override public boolean equals (Object o) {
@@ -201,18 +328,15 @@ public class SparseMatrix implements Matrix
 
       SparseMatrix Q = ((SparseMatrix)o);
       if(Q.numberOfRows() != rows || Q.numberOfColumns() != columns) {
-          System.out.println(" kek");
           return false;
       }
       if(value.size() != Q.value.size()){
-          System.out.println(" lol");
           return false;
       }
       if (Q.value.size() > 0) {
           for (int i = 0; i < value.size(); i++)
               if (abs(value.get(i) - Q.value.get(i)) > EPSILON || !row.get(i).equals(Q.row.get(i))
                       || !column.get(i).equals(Q.column.get(i))) {
-                  //System.out.println(k+" " + i + " " + value.get(i) + " " + Q.value.get(i) + " " + row.get(i) + " " + Q.row.get(i) + " " + column.get(i) + " " + Q.column.get(i));
                   return false;
               }
 
